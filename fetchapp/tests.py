@@ -10,15 +10,15 @@ from .client import FetchAppInvalidOrderTypeException
 import pprint
 try:
     import config
-except Exception, e:
-    print """
+except Exception as e:
+    print("""
 
 Could not find config.py. Please add a module to your path with
 strings FETCHAPP_KEY and FETCHAPP_TOKEN
 
 See: See http://YOUR_STORE_NAME.fetchapp.com/admin/settings/payments
 
-"""
+""")
     raise e
 
 PP = pprint.PrettyPrinter(indent=4)
@@ -57,7 +57,7 @@ class FetchAppTest(unittest.TestCase):
             PP.pprint(account_data)
             
     def test_01_items(self):
-        items =  self.fa.items()
+        items =  list(self.fa.items())
         self.assertTrue(isinstance(items, list))
         if config.DEBUG: 
             PP.pprint("FetchApp.items(...)")
@@ -122,7 +122,7 @@ class FetchAppTest(unittest.TestCase):
                    
     def test_04_order(self):
         # Create an item to order.
-        items =  self.fa.items()
+        items =  list(self.fa.items())
         self.assertTrue(len(items) > 0)
         for item in items:
             if len(item["files"]) > 0:

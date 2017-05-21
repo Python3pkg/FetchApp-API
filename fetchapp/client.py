@@ -1,6 +1,6 @@
 from base64 import b64encode
-from urllib import urlencode
-import urllib2
+from urllib.parse import urlencode
+import urllib.request, urllib.error, urllib.parse
 from datetime import datetime
 from lxml import etree
 from dateutil.parser import parse
@@ -47,12 +47,12 @@ class FetchApp(object):
         """Create a new account"""
         
         account = etree.Element("account")
-        etree.SubElement(account, "name").text = unicode(name)
-        etree.SubElement(account, "first_name").text = unicode(first_name)
-        etree.SubElement(account, "last_name").text = unicode(last_name)
-        etree.SubElement(account, "email").text = unicode(email)
-        etree.SubElement(account, "url").text = unicode(url)
-        request = urllib2.Request(
+        etree.SubElement(account, "name").text = str(name)
+        etree.SubElement(account, "first_name").text = str(first_name)
+        etree.SubElement(account, "last_name").text = str(last_name)
+        etree.SubElement(account, "email").text = str(email)
+        etree.SubElement(account, "url").text = str(url)
+        request = urllib.request.Request(
             "http://%s%s" % (self.host, '/api/account/create'), 
             data=etree.tostring(account, encoding="utf-8", xml_declaration=True))
         request.add_header('Content-Type', "application/xml")
@@ -118,9 +118,9 @@ class FetchApp(object):
         
         path = "/api/items/create"
         item = etree.Element("item")
-        etree.SubElement(item, "sku").text = unicode(sku)
-        etree.SubElement(item, "name").text = unicode(name)
-        etree.SubElement(item, "price", attrib={"type":"float"}).text = unicode(price)
+        etree.SubElement(item, "sku").text = str(sku)
+        etree.SubElement(item, "name").text = str(name)
+        etree.SubElement(item, "price", attrib={"type":"float"}).text = str(price)
         xmldoc = self._call(
             path, 
             data=etree.tostring(item, encoding="utf-8", xml_declaration=True), 
@@ -134,11 +134,11 @@ class FetchApp(object):
         path = "/api/items/%s" % sku
         item = etree.Element("item")
         if new_sku is not None:
-            etree.SubElement(item, "sku").text = unicode(new_sku)
+            etree.SubElement(item, "sku").text = str(new_sku)
         if name is not None:
-            etree.SubElement(item, "name").text = unicode(name)
+            etree.SubElement(item, "name").text = str(name)
         if price is not None:
-            etree.SubElement(item, "price", attrib={"type":"float"}).text = unicode(price)
+            etree.SubElement(item, "price", attrib={"type":"float"}).text = str(price)
         xmldoc = self._call(    
             path, 
             data=etree.tostring(item, encoding="utf-8", xml_declaration=True), 
@@ -211,21 +211,21 @@ class FetchApp(object):
 
         order = etree.Element("order")
         if order_id is not None:
-            etree.SubElement(order, "id").text = unicode(order_id)
+            etree.SubElement(order, "id").text = str(order_id)
         if title is not None:
-            etree.SubElement(order, "title").text = unicode(title)
+            etree.SubElement(order, "title").text = str(title)
         if first_name is not None:
-            etree.SubElement(order, "first_name").text = unicode(first_name)
+            etree.SubElement(order, "first_name").text = str(first_name)
         if last_name is not None:
-            etree.SubElement(order, "last_name").text = unicode(last_name)
+            etree.SubElement(order, "last_name").text = str(last_name)
         if email is not None:
-            etree.SubElement(order, "email").text = unicode(email)
+            etree.SubElement(order, "email").text = str(email)
         if send_email is not None:
             send_email = int(send_email)
-            etree.SubElement(order, "send_email").text = unicode(send_email)
+            etree.SubElement(order, "send_email").text = str(send_email)
         if ignore_items is not None:
             ignore_items = int(ignore_items)
-            etree.SubElement(order, "ignore_items").text = unicode(ignore_items)
+            etree.SubElement(order, "ignore_items").text = str(ignore_items)
         if expiration_date is not None:
             if not isinstance(expiration_date, datetime):
                 expiration_date = parse(expiration_date)
@@ -239,7 +239,7 @@ class FetchApp(object):
                 order, 
                 "download_limit", 
                 attrib={"type":"integer"})
-            dl_subelement.text = unicode(download_limit)
+            dl_subelement.text = str(download_limit)
         if skus is not None:
             if not isinstance(skus, list):
                 raise FetchAppOrderException("skus must be a list")
@@ -249,7 +249,7 @@ class FetchApp(object):
                 attrib={"type":"array"})
             for sku in skus:
                 order_item = etree.SubElement(order_items, "order_item")
-                etree.SubElement(order_item, "sku").text = unicode(sku)
+                etree.SubElement(order_item, "sku").text = str(sku)
         return order
 
     def order_create(self, 
@@ -363,7 +363,7 @@ class FetchApp(object):
             url = "http://%s%s?%s" % (self.host, path, urlencode(parameters))
         else:
             url = "http://%s%s" % (self.host, path)
-        request = urllib2.Request(url, data=data)
+        request = urllib.request.Request(url, data=data)
         request.add_header('Authorization', 
             'Basic %s' % b64encode("%s:%s" % (self.key, self.token)))
         if content_type is not None:
@@ -373,10 +373,10 @@ class FetchApp(object):
         return self._make_request(request)
         
     def _make_request(self, request):
-        opener = urllib2.build_opener(urllib2.HTTPHandler)
+        opener = urllib.request.build_opener(urllib.request.HTTPHandler)
         try:
             response = opener.open(request)
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
             if e.code == 401:
                 raise FetchAppAuthenticationException()
             elif e.code == 404:
